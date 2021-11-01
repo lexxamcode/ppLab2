@@ -1,8 +1,5 @@
 import json
-import argparse
-from tqdm import tqdm
-import time
-import sys
+import re
 
 
 class Person(object):
@@ -27,6 +24,7 @@ class Person(object):
             address : str
                 Адресс
     """
+
     def __init__(self, telephone: str = '+7-(000)-000-00-00', weight: int = 0, snils: str = '00000000000',
                  passport_series: str = '00 00', occupation: str = 'None', age: int = 0,
                  political_views: str = 'None', worldview: str = 'None', address: str = 'None') -> None:
@@ -63,6 +61,63 @@ class Person(object):
         self.address = address
 
 
+class Validator(object):
+    collection: list
+    """
+        Класс-валидатор списка записей,
+        который считывает записи из файла и 
+        проводит их валидацию
+        Attributes
+        --------
+            collection: list
+                Контейнер записей типа Person
+    """
+
+    def __init__(self, path: str = None) -> None:
+        """
+        Конструктор класса-валидатора
+        считывает из файла с путем path
+        записи и сохраняет их в контейнер записей
+        валидатора.
+        Parameters
+        ---------
+        path: Путь к файлу с записями в формате JSON
+        """
+        if not path:
+            return
+        self.collection = []
+        data = json.load(open(path, encoding='windows-1251'))
+        for item in range(len(data)):
+            new = Person()
+            new.telephone = data[item]['telephone']
+            new.weight = data[item]['weight']
+            new.snils = data[item]['snils']
+            new.passport_series = data[item]['passport_series']
+            new.occupation = data[item]['occupation']
+            new.age = data[item]['age']
+            new.political_views = data[item]['political_views']
+            new.worldview = data[item]['worldview']
+            new.address = data[item]['address']
+
+            self.collection.append(new)
+
+    def __len__(self) -> int:
+        return len(self.collection)
+
+    # def validate(self) -> None:
+       # for item in self.collection:
+          #  match = re.match(r'\+7-\(9\d{2}\)-\d{3}-\d{2}-\d{2}', item.telephone)
+           # if match is None:
+            #    item.telephone = re.sub('a', '9', item.telephone)
+            #    item.telephone = re.sub('^7', r'+7', item.telephone)
+            #    item.telephone = re.sub(r'\(', r'-(', item.telephone)
+            #    item.telephone = re.sub(r'\)', r')-', item.telephone)
+            #    item.telephone = re.sub(r'--', '-', item.telephone)
+            #    print(item.telephone + '\t<-')
+
+
 if __name__ == '__main__':
-    person = Person()
-    help(Person.__init__)
+    main_validator = Validator('82.txt')
+    print(main_validator.collection[1].telephone)
+
+    main_validator.validate()
