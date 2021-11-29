@@ -164,7 +164,10 @@ class Validator(object):
             ph_match = re.match(
                 r'\+7-\(9\d{2}\)-\d{3}-\d{2}-\d{2}',
                 self.collection[i].telephone)
-            correct_weight = (not isinstance(self.collection[i].weight, str))
+            if not isinstance(self.collection[i].weight, str):
+                correct_weight = (self.collection[i].weight > 0) and (self.collection[i].weight < 200)
+            else:
+                correct_weight = False
             sn_match = re.match(r'\d{11}', self.collection[i].snils)
             ps_match = re.match(
                 r'\d{2} \d{2}',
@@ -172,7 +175,10 @@ class Validator(object):
             oc_match = re.match(
                 r'([А-Яа-яA-Za-z]+$)',
                 self.collection[i].occupation)
-            correct_age = (not isinstance(self.collection[i].age, str))
+            if not isinstance(self.collection[i].age, str):
+                correct_age = (self.collection[i].age > 16) and (self.collection[i].age < 100)
+            else:
+                correct_age = False
             pv_match = re.match(r'^[А-Яа-я]+$', self.collection[i].political_views)
             wv_match = re.match(r'^([А-Яа-я]+$)|(Секулярный гуманизм)', self.collection[i].worldview)
             ad_match = re.match(r'(^ул\. [А-Яа-я, \s]+ \d+$)|(Аллея [А-Яа-я, \s]+ \d+$)', self.collection[i].address)
@@ -230,32 +236,32 @@ parser = argparse.ArgumentParser(description='Paths to input and output files')
 parser.add_argument('-i', '--input', type=str, help='Path to the input file')
 parser.add_argument('-o', '--output', type=str, help='Path to the output file')
 
+if __name__ == '__main__':
+    input_path = '82.txt'
+    output_path = 'valid.txt'
+    args = parser.parse_args()
+    if args.input is not None:
+        input_path = args.input
+    if args.output is not None:
+        output_path = args.output
 
-input_path = '82.txt'
-output_path = 'valid.txt'
-args = parser.parse_args()
-if args.input is not None:
-     input_path = args.input
-if args.output is not None:
-    output_path = args.output
+    validator = Validator()
+    validator.load(input_path)
+    valid = validator.validate()
+    result_list = []
+    result_progressbar = t.tqdm(range(len(valid)))
+    result_progressbar.set_description('Сохраняем валидные записи')
+    for item in result_progressbar:
+        temp_dict = {'telephone': valid[item].telephone,
+                     'weight': valid[item].weight,
+                     'snils': valid[item].snils,
+                     'passport_series': valid[item].passport_series,
+                     'occupation': valid[item].occupation,
+                     'age': valid[item].age,
+                     'political_views': valid[item].political_views,
+                     'worldview': valid[item].worldview,
+                     'address': valid[item].address}
+        result_list.append(temp_dict)
 
-validator = Validator()
-validator.load(input_path)
-valid = validator.validate()
-result_list = []
-result_progressbar = t.tqdm(range(len(valid)))
-result_progressbar.set_description('Сохраняем валидные записи')
-for item in result_progressbar:
-    temp_dict = {'telephone': valid[item].telephone,
-                 'weight': valid[item].weight,
-                 'snils': valid[item].snils,
-                 'passport_series': valid[item].passport_series,
-                 'occupation': valid[item].occupation,
-                 'age': valid[item].age,
-                 'political_views': valid[item].political_views,
-                 'worldview': valid[item].worldview,
-                 'address': valid[item].address}
-    result_list.append(temp_dict)
-
-with open(output_path, 'w') as v_file:
-    json.dump(result_list, v_file, ensure_ascii=False)
+    with open(output_path, 'w') as v_file:
+        json.dump(result_list, v_file, ensure_ascii=False)
